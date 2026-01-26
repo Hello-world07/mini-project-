@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "195095990413",
+    "project_id": "loginpage-1a978",
+    "storage_bucket": "loginpage-1a978.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:195095990413:android:ab80021ee87e6ea70a92c4",
+        "android_client_info": {
+          "package_name": "com.example.loginpage"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "195095990413-u9n7e2uj5lb22mb7lpvlksnvis2qangv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.loginpage",
+            "certificate_hash": "f38d450118e5b37646aa903dc2f804547aa1296b"
+          }
+        },
+        {
+          "client_id": "195095990413-1iddu6jngsmk61lpspr2ll2739q7k2jk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIF0MSVQHPUCaEoVnCyvfeOnf_vW81VVE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "195095990413-1iddu6jngsmk61lpspr2ll2739q7k2jk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

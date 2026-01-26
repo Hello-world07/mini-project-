@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Flutter + Backend",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "preLaunchTask": "Run Backend"
+    }
+  ],
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Run Backend",
+        "type": "shell",
+        "command": "uvicorn backend.main:app --reload --port 8000",
+        "isBackground": true,
+        "problemMatcher": {
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "Uvicorn running",
+            "endsPattern": "Application startup complete"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,56 @@
+name: loginpage
+description: "A simple login app with Firebase Authentication & Firestore"
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase Services
+  firebase_core: ^4.3.0
+  firebase_auth: ^6.1.3
+  cloud_firestore: ^6.1.1
+
+  # Google Login
+  google_sign_in: ^6.2.2
+
+  # Fonts
+  google_fonts: ^7.0.2
+
+  # API Calls
+  http: ^1.2.0
+
+  # File Picker (CSV Upload)
+  file_picker: ^8.0.0
+
+  # Local Storage (for History feature)
+  shared_preferences: ^2.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+  # Launcher Icon Generator
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/icon/
+    - assets/images/
+
+# ---------------------------------------
+# APP ICON CONFIGURATION
+# ---------------------------------------
+flutter_launcher_icons:
+  android: true
+  ios: true
+  min_sdk_android: 21
+  image_path: "assets/icon/app_icon.png"
