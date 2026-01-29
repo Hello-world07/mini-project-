@@ -1,5 +1,5 @@
 # ------------------------------------------------------
-# IMPORTANT: Use non-GUI backend for macOS
+# IMPORTANT: Use non-GUI backend for server (Render)
 # ------------------------------------------------------
 import matplotlib
 matplotlib.use('Agg')
@@ -15,17 +15,17 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import base64
 from io import BytesIO
-
+import os
 
 # ------------------------------------------------------
 # Flask App Setup
 # ------------------------------------------------------
 app = Flask(__name__)
-CORS(app)  # Enable CORS for Flutter Web
+CORS(app)  # Enable CORS for Flutter App
 
 
 # ------------------------------------------------------
-# Convert Matplotlib Plot to Base64
+# Convert Matplotlib Plot to Base64 Image
 # ------------------------------------------------------
 def plot_to_base64():
     buffer = BytesIO()
@@ -47,16 +47,16 @@ def upload_csv():
     file = request.files["file"]
 
     try:
-        # FIX: Avoid UTF-8 decoding error by allowing any encoding
+        # Read CSV with flexible encoding
         df = pd.read_csv(file, encoding='latin1', encoding_errors='ignore')
 
-        # Keep only numeric columns
+        # Select only numeric columns
         df_numeric = df.select_dtypes(include=['int64', 'float64'])
 
         if df_numeric.empty:
             return jsonify({"error": "CSV contains no numeric columns"}), 400
 
-        # Apply KMeans clustering
+        # Apply KMeans Clustering
         kmeans = KMeans(n_clusters=3, random_state=42)
         df_numeric["cluster"] = kmeans.fit_predict(df_numeric)
 
@@ -67,10 +67,10 @@ def upload_csv():
         cluster_count = df_numeric["cluster"].value_counts().to_dict()
 
         # ------------------------------------------------------
-        # Scatter Plot (first 2 numeric columns)
+        # Scatter Plot
         # ------------------------------------------------------
         plt.figure(figsize=(6, 4))
-        cols = df_numeric.columns[:2]
+        cols = df_numeric.columns[:2]  # First two numeric columns
         sns.scatterplot(
             x=df_numeric[cols[0]],
             y=df_numeric[cols[1]],
@@ -126,7 +126,8 @@ def home():
 
 
 # ------------------------------------------------------
-# Run Server
+# Run Server (Render Compatible)
 # ------------------------------------------------------
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

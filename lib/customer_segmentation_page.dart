@@ -13,13 +13,28 @@ class CustomerSegmentationPage extends StatefulWidget {
       _CustomerSegmentationPageState();
 }
 
-class _CustomerSegmentationPageState extends State<CustomerSegmentationPage> {
+class _CustomerSegmentationPageState extends State<CustomerSegmentationPage>
+    with SingleTickerProviderStateMixin {
   bool loading = false;
   Map<String, dynamic>? result;
 
-  // Your NGROK backend URL
-final String backendURL = "https://gwyn-unfallen-effusively.ngrok-free.dev/upload_csv/";
+  final String backendURL =
+      "https://gwyn-unfallen-effusively.ngrok-free.dev/upload_csv/";
 
+  late AnimationController _controller;
+  late Animation<double> fadeAnim;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+
+    fadeAnim = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+  }
 
   // Pick CSV
   void pickCSV() async {
@@ -33,22 +48,18 @@ final String backendURL = "https://gwyn-unfallen-effusively.ngrok-free.dev/uploa
     uploadCSV(picked.files.single.bytes!, picked.files.single.name);
   }
 
-  // Save history (only filename)
+  // Save history
   Future<void> saveToHistory(String filename) async {
     final prefs = await SharedPreferences.getInstance();
-
     List<String> names = prefs.getStringList('history_names') ?? [];
 
-    if (names.length >= 5) {
-      names.removeAt(0);
-    }
-
+    if (names.length >= 5) names.removeAt(0);
     names.add("${DateTime.now()} - $filename");
 
     await prefs.setStringList('history_names', names);
   }
 
-  // Upload CSV to backend
+  // Upload CSV
   Future<void> uploadCSV(Uint8List data, String filename) async {
     setState(() {
       loading = true;
@@ -70,6 +81,7 @@ final String backendURL = "https://gwyn-unfallen-effusively.ngrok-free.dev/uploa
     if (response.statusCode == 200) {
       setState(() => result = jsonDecode(resBody));
       await saveToHistory(filename);
+      _controller.forward();
     } else {
       setState(() => result = {"error": resBody});
     }
@@ -77,28 +89,73 @@ final String backendURL = "https://gwyn-unfallen-effusively.ngrok-free.dev/uploa
     setState(() => loading = false);
   }
 
+  // MAIN UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F4F6),
-      appBar: AppBar(
-        title: const Text(
-          "Customer Segmentation",
-          style: TextStyle(fontWeight: FontWeight.bold),
+      backgroundColor: const Color(0xFFF5F6FA),
+
+      // PROFESSIONAL MENU BAR
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(70),
+        child: AppBar(
+          elevation: 6,
+          toolbarHeight: 70,
+          backgroundColor: Colors.transparent,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF3F51B5), Colors.indigo],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.vertical(
+                bottom: Radius.circular(20),
+              ),
+            ),
+          ),
+
+          centerTitle: true,
+
+          title: const Text(
+            "Customer Segmentation",
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 22,
+              letterSpacing: 0.3,
+            ),
+          ),
+
+          leading: IconButton(
+            icon: const Icon(Icons.menu, size: 28, color: Colors.white),
+            onPressed: () {},
+          ),
+
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.history, size: 26, color: Colors.white),
+              onPressed: () {},
+            ),
+            const SizedBox(width: 10),
+          ],
         ),
-        backgroundColor: Colors.indigo,
-        centerTitle: true,
       ),
+
+      // BODY
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(18),
         child: Column(
           children: [
             _introCard(),
             const SizedBox(height: 20),
             _uploadCard(),
             const SizedBox(height: 20),
-            if (loading) const CircularProgressIndicator(color: Colors.indigo),
-            if (result != null) _dashboard(),
+            if (loading)
+              const Center(
+                child: CircularProgressIndicator(color: Colors.indigo),
+              ),
+            if (result != null)
+              FadeTransition(opacity: fadeAnim, child: _dashboard()),
           ],
         ),
       ),
@@ -108,11 +165,11 @@ final String backendURL = "https://gwyn-unfallen-effusively.ngrok-free.dev/uploa
   // INTRO CARD
   Widget _introCard() {
     return Card(
-      elevation: 4,
+      elevation: 5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: const Padding(
-        padding: EdgeInsets.all(20),
+        padding: EdgeInsets.all(22),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -120,11 +177,11 @@ final String backendURL = "https://gwyn-unfallen-effusively.ngrok-free.dev/uploa
               "What is Customer Segmentation?",
               style: TextStyle(
                 fontSize: 22,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w800,
                 color: Colors.indigo,
               ),
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 14),
             Text(
               "Customer Segmentation groups customers based on behavior such as Spending, Orders, Visits, Age, Income, etc.\n\n"
               "This project uses K-Means Clustering and automatically generates:\n"
@@ -135,7 +192,11 @@ final String backendURL = "https://gwyn-unfallen-effusively.ngrok-free.dev/uploa
               "• Box Plot\n"
               "• Bar Chart\n\n"
               "These help analyze customers easily.",
-              style: TextStyle(fontSize: 15, height: 1.5),
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.55,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -146,15 +207,18 @@ final String backendURL = "https://gwyn-unfallen-effusively.ngrok-free.dev/uploa
   // UPLOAD CARD
   Widget _uploadCard() {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
             const Text(
               "Upload CSV File",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+              ),
             ),
             const SizedBox(height: 12),
             const Text(
@@ -164,25 +228,30 @@ final String backendURL = "https://gwyn-unfallen-effusively.ngrok-free.dev/uploa
               "3. Click 'Choose CSV'.\n"
               "4. The ML model generates clusters & charts.",
               textAlign: TextAlign.left,
-              style: TextStyle(fontSize: 14, color: Colors.black87),
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 22),
             ElevatedButton.icon(
               onPressed: pickCSV,
-              icon: const Icon(Icons.upload_file, color: Colors.white),
+              icon: const Icon(Icons.upload_file, color: Colors.white, size: 22),
               label: const Text(
                 "Choose CSV",
                 style: TextStyle(
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w900,
                   fontSize: 16,
                 ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.indigo,
-                minimumSize: const Size(180, 50),
+                minimumSize: const Size(200, 50),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(14)),
+                elevation: 3,
               ),
             ),
           ],
@@ -205,18 +274,21 @@ final String backendURL = "https://gwyn-unfallen-effusively.ngrok-free.dev/uploa
       children: [
         const Text(
           "Segmentation Results",
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+          ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         _clusterSummaryCard(),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         _clusterCountCard(),
         const SizedBox(height: 20),
         const Text(
           "Charts",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         _chartTile("Scatter Plot", result!["charts"]["scatter"]),
         _chartTile("Heatmap", result!["charts"]["heatmap"]),
         _chartTile("Box Plot", result!["charts"]["boxplot"]),
@@ -225,48 +297,62 @@ final String backendURL = "https://gwyn-unfallen-effusively.ngrok-free.dev/uploa
     );
   }
 
-  // CLUSTER SUMMARY
+  // CLUSTER SUMMARY CARD
   Widget _clusterSummaryCard() {
     final summary = result!["cluster_summary"] as Map<String, dynamic>;
 
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Cluster Summary",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            ...summary.entries.map(
-              (e) => Text("Cluster ${e.key}: ${e.value.toString()}"),
+    return _glassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Cluster Summary",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 12),
+          ...summary.entries.map(
+            (e) => Text(
+              "Cluster ${e.key}: ${e.value.toString()}",
+              style: const TextStyle(fontWeight: FontWeight.w700),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  // CLUSTER COUNT
+  // CLUSTER COUNT CARD
   Widget _clusterCountCard() {
     final count = result!["cluster_count"] as Map<String, dynamic>;
 
+    return _glassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Cluster Count",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 12),
+          ...count.entries.map(
+            (e) => Text(
+              "Cluster ${e.key}: ${e.value}",
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // GLASS CARD WRAPPER
+  Widget _glassCard({required Widget child}) {
     return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Cluster Count",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            ...count.entries.map((e) => Text("Cluster ${e.key}: ${e.value}")),
-          ],
-        ),
+        padding: const EdgeInsets.all(18),
+        child: child,
       ),
     );
   }
@@ -276,21 +362,26 @@ final String backendURL = "https://gwyn-unfallen-effusively.ngrok-free.dev/uploa
     final bytes = base64Decode(base64img);
 
     return Card(
-      elevation: 4,
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 5,
+      shadowColor: Colors.black12,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      margin: const EdgeInsets.only(bottom: 18),
       child: Column(
         children: [
           const SizedBox(height: 10),
-          Text(title,
-              style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 12),
           ClipRRect(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             child: Image.memory(bytes, height: 260, fit: BoxFit.cover),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
         ],
       ),
     );
