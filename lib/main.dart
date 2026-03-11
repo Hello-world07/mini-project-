@@ -3,36 +3,47 @@ import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'login_page.dart';
 import 'home_page.dart';
-import 'project_intro_page.dart'; // NEW PAGE
+import 'project_intro_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  MyApp({super.key});
+
+  // Single ThemeNotifier instance — lives for the lifetime of the app
+  final ThemeNotifier _themeNotifier = ThemeNotifier();
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Mini Project',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-        useMaterial3: true,
-      ),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: _themeNotifier,
+      builder: (context, themeMode, _) {
+        return MaterialApp(
+          title: 'Mini Project',
+          debugShowCheckedModeBanner: false,
 
-      // FIRST SCREEN
-      initialRoute: '/intro',
+          // ── Themes ──────────────────────────────────────────────────────
+          themeMode: themeMode,
+          theme:     AppTheme.light,
+          darkTheme: AppTheme.dark,
 
-      routes: {
-        '/intro': (context) => const ProjectIntroPage(), // NEW
-        '/login': (context) => const LoginPage(),
-        '/home': (context) => const HomePage(),
+          // ── Routes ──────────────────────────────────────────────────────
+          initialRoute: '/intro',
+          routes: {
+            '/':      (context) => const ProjectIntroPage(),
+            '/intro': (context) => const ProjectIntroPage(),
+            '/login': (context) => const LoginPage(),
+
+            // Pass themeNotifier into HomePage so the toggle button works
+            '/home':  (context) => HomePage(themeNotifier: _themeNotifier),
+          },
+        );
       },
     );
   }

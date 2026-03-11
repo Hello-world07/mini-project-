@@ -30,10 +30,22 @@ dependencies:
   # Local Storage (for History feature)
   shared_preferences: ^2.2.2
 
+  # File saving to Downloads — uses MediaStore API on Android 11+
+  # No special permissions needed, works on all Android versions
+  file_saver: ^0.2.12
+
+  # Path provider — kept for other file operations
+  path_provider: ^2.1.5
+
+  # Permissions — kept for other runtime permissions
+  permission_handler: ^11.3.1
+
+  # Success animation
+  confetti: ^0.8.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^6.0.0
 
   # Launcher Icon Generator
@@ -41,7 +53,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
   assets:
     - assets/icon/
     - assets/images/
