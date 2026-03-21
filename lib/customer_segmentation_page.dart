@@ -187,7 +187,7 @@ class _CustomerSegmentationPageState extends State<CustomerSegmentationPage>
     } catch (e) {
       _err("Request failed: $e");
     } finally {
-      t?.cancel();
+      t.cancel();
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -421,8 +421,10 @@ class _CustomerSegmentationPageState extends State<CustomerSegmentationPage>
   Widget _resultArea() {
     if (_loading)        return _progressCard();
     if (_error != null)  return _errorCard();
-    if (_result != null) return FadeTransition(
+    if (_result != null) {
+      return FadeTransition(
         opacity: _fadeAnim, child: _dashboard());
+    }
     return const SizedBox.shrink();
   }
 
@@ -1030,7 +1032,7 @@ class _CustomerSegmentationPageState extends State<CustomerSegmentationPage>
       Uint8List? bytes;
       try { bytes = base64Decode(b64); } catch (_) { return null; }
       return _chartCard(
-          e.value.$1, e.value.$2, e.value.$3, bytes!, b64, e.key);
+          e.value.$1, e.value.$2, e.value.$3, bytes, b64, e.key);
     }).whereType<Widget>().toList();
 
     return LayoutBuilder(builder: (_, c) {

@@ -220,12 +220,12 @@ class _DashPainter extends CustomPainter {
 class _Reveal extends StatefulWidget {
   final Widget child;
   final Duration delay;
-  final Duration duration;
+  final Duration duration; // ← FIX: now has a default value in constructor
 
   const _Reveal({
     required this.child,
     required this.delay,
-    this.duration = const Duration(milliseconds: 650),
+    this.duration = const Duration(milliseconds: 500), // ← FIX applied here
   });
 
   @override

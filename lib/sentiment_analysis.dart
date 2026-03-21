@@ -315,8 +315,11 @@ class _SentimentEngine {
         final idx = lowerText.indexOf(entry.key, start);
         if (idx == -1) break;
         final s = entry.value;
-        if (s >= 0) phrasePos += s;
-        else        phraseNeg -= s;
+        if (s >= 0) {
+          phrasePos += s;
+        } else {
+          phraseNeg -= s;
+        }
         start = idx + entry.key.length;
       }
     }
@@ -358,8 +361,12 @@ class _SentimentEngine {
     final contrastIdx    = words.indexWhere(_contrast.contains);
 
     if (contrastIdx >= 0) {
-      for (var i = 0;               i < contrastIdx;    i++) contrastWeight[i] = 0.7;
-      for (var i = contrastIdx + 1; i < words.length;  i++) contrastWeight[i] = 1.6;
+      for (var i = 0;               i < contrastIdx;    i++) {
+        contrastWeight[i] = 0.7;
+      }
+      for (var i = contrastIdx + 1; i < words.length;  i++) {
+        contrastWeight[i] = 1.6;
+      }
     }
 
     // ── Word loop ─────────────────────────────────────────────────────────────
@@ -433,8 +440,9 @@ class _SentimentEngine {
     // Zero-evidence neutral guard: if rawTotal == 0 the score (0.5) is
     // meaningless — force 'Neutral' unconditionally.
     String label;
-    if (rawTotal == 0)      label = 'Neutral';
-    else if (score >= 0.58) label = 'Positive';
+    if (rawTotal == 0) {
+      label = 'Neutral';
+    } else if (score >= 0.58) label = 'Positive';
     else if (score <= 0.42) label = 'Negative';
     else                    label = 'Neutral';
 
