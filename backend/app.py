@@ -21,11 +21,11 @@ import os
 # Flask App Setup
 # ------------------------------------------------------
 app = Flask(__name__)
-CORS(app)  # Enable CORS for Flutter App
+CORS(app)
 
 
 # ------------------------------------------------------
-# Convert Matplotlib Plot to Base64 Image
+# Convert Plot to Base64
 # ------------------------------------------------------
 def plot_to_base64():
     buffer = BytesIO()
@@ -47,36 +47,57 @@ def upload_csv():
     file = request.files["file"]
 
     try:
-        # Read CSV with flexible encoding
+        # Read CSV
         df = pd.read_csv(file, encoding='latin1', encoding_errors='ignore')
 
-        # Select only numeric columns
+        # Select numeric columns only
         df_numeric = df.select_dtypes(include=['int64', 'float64'])
 
         if df_numeric.empty:
             return jsonify({"error": "CSV contains no numeric columns"}), 400
 
-        # Apply KMeans Clustering
-        kmeans = KMeans(n_clusters=3, random_state=42)
+        # ------------------------------------------------------
+        # GET CLUSTER VALUE (from frontend or auto)
+        # ------------------------------------------------------
+        k = request.form.get('k')
+
+        if k:
+            k = int(k)
+        else:
+            k = min(5, len(df_numeric))  # auto cluster
+
+        # Safety check
+        if k <= 0 or k > len(df_numeric):
+            return jsonify({"error": "Invalid number of clusters"}), 400
+
+        # ------------------------------------------------------
+        # Apply KMeans
+        # ------------------------------------------------------
+        df_numeric = df_numeric.copy()
+        kmeans = KMeans(n_clusters=k, random_state=42)
         df_numeric["cluster"] = kmeans.fit_predict(df_numeric)
 
+        # ------------------------------------------------------
         # Cluster Summary
+        # ------------------------------------------------------
         cluster_summary = df_numeric.groupby("cluster").mean().to_dict()
 
         # Cluster Count
         cluster_count = df_numeric["cluster"].value_counts().to_dict()
 
         # ------------------------------------------------------
-        # Scatter Plot
+        # Scatter Plot (only if >=2 columns)
         # ------------------------------------------------------
-        plt.figure(figsize=(6, 4))
-        cols = df_numeric.columns[:2]  # First two numeric columns
-        sns.scatterplot(
-            x=df_numeric[cols[0]],
-            y=df_numeric[cols[1]],
-            hue=df_numeric["cluster"]
-        )
-        scatter_img = plot_to_base64()
+        scatter_img = ""
+        if len(df_numeric.columns) >= 2:
+            plt.figure(figsize=(6, 4))
+            cols = df_numeric.columns[:2]
+            sns.scatterplot(
+                x=df_numeric[cols[0]],
+                y=df_numeric[cols[1]],
+                hue=df_numeric["cluster"]
+            )
+            scatter_img = plot_to_base64()
 
         # ------------------------------------------------------
         # Heatmap
@@ -93,16 +114,17 @@ def upload_csv():
         boxplot_img = plot_to_base64()
 
         # ------------------------------------------------------
-        # Bar Chart (Cluster Counts)
+        # Bar Chart
         # ------------------------------------------------------
         plt.figure(figsize=(6, 4))
         df_numeric["cluster"].value_counts().plot.bar()
         bar_img = plot_to_base64()
 
         # ------------------------------------------------------
-        # API Response
+        # RESPONSE
         # ------------------------------------------------------
         return jsonify({
+            "clusters_used": k,
             "cluster_summary": cluster_summary,
             "cluster_count": cluster_count,
             "charts": {
@@ -118,7 +140,7 @@ def upload_csv():
 
 
 # ------------------------------------------------------
-# HOME PAGE TEST ROUTE
+# HOME ROUTE
 # ------------------------------------------------------
 @app.route("/", methods=["GET"])
 def home():
@@ -126,7 +148,7 @@ def home():
 
 
 # ------------------------------------------------------
-# Run Server (Render Compatible)
+# RUN SERVER
 # ------------------------------------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
